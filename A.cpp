@@ -8,22 +8,73 @@ using std::cout;
 using std::queue;
 using std::vector;
 
-int n;
-int m;
-int a;
-int b;
-int u;
-int v;
 
-vector<int> dist, parent;
+template <typename T1, typename T2, typename K>
+class Graph {
+public:
+  virtual int RetV() = 0;
+  virtual vector<T1> RetS(T1) = 0;
+  virtual void SetV() = 0;
+  virtual void SetWay(T1, T2) = 0;
+  virtual void BFS(T1) = 0;
+  virtual void Rez() = 0;
 
-vector<vector<int> > g;
+private:
+};
 
-void Bfs(int start) {
-  parent = vector<int>(n + 1, -1);
-  dist = vector<int>(n + 1, -1);
+template <typename T1, typename T2, typename K>
+class CraphOnVector : public Graph<T1, T2, K> {
+public:
+  CraphOnVector(int ko, int reb);
+  int RetV();
+  vector<T1> RetS(T1 a);
+  void SetV();
+  void SetWay(T1, T2);
+  void BFS(T1);
+  void Rez();
+private:
+  int kolvo = 0;
+  int reb = 0;
+  T1 start;
+  T2 finish;
+  int u;
+  int v;
+  vector<int> dist, parent;
+  vector<vector<int>> g;
+};
+
+template <typename T1, typename T2, typename K>
+vector<T1> CraphOnVector<T1, T2, K>::RetS(T1 a) {
+  return g[a];
+}
+
+template <typename T1, typename T2, typename K>
+void CraphOnVector<T1, T2, K>::Rez() {
+  if (parent[finish] == -1) {
+    if (dist[finish] == 0) {
+      cout << "0\n" << finish;
+    } else {
+      cout << "-1\n";
+    }
+  } else {
+    cout << dist[finish] << '\n';
+    vector<int> path(1, finish);
+    while (parent[finish] != -1) {
+      finish = parent[finish];
+      path.push_back(finish);
+    }
+    for (int i = int(path.size() - 1); i >= 0; i--) {
+      cout << path[i] << " ";
+    }
+  }
+}
+
+template <typename T1, typename T2, typename K>
+void CraphOnVector<T1, T2, K>::BFS(T1 start) {
+  parent = vector<T1>(kolvo + 1, -1);
+  dist = vector<T1>(kolvo + 1, -1);
   dist[start] = 0;
-  queue<int> q;
+  queue<T1> q;
   q.push(start);
   while (!q.empty()) {
     int v = q.front();
@@ -39,32 +90,46 @@ void Bfs(int start) {
   }
 }
 
-int main(void) {
-  cin >> n >> m;
-  cin >> a >> b;
-  g.resize(n + 1);
-  for (int j = 0; j < m; ++j) {
+template <typename T1, typename T2, typename K>
+void CraphOnVector<T1, T2, K>::SetV() {
+  g.resize(kolvo + 1);
+  for (int j = 0; j < reb; ++j) {
     cin >> u >> v;
     g[u].push_back(v);
     g[v].push_back(u);
   }
-  Bfs(a);
-  if (parent[b] == -1) {
-    if (dist[b] == 0) {
-      cout << "0\n" << b;
-    } else {
-      cout << "-1\n";
-    }
-  } else {
-    cout << dist[b] << '\n';
-    vector<int> path(1, b);
-    while (parent[b] != -1) {
-      b = parent[b];
-      path.push_back(b);
-    }
-    for (int i = int(path.size() - 1); i >= 0; i--) {
-      cout << path[i] << " ";
-    }
-  }
+}
+
+template <typename T1, typename T2, typename K>
+void CraphOnVector<T1, T2, K>::SetWay(T1 a, T2 b) {
+  this->start = a;
+  this->finish = b;
+}
+
+template <typename T1, typename T2, typename K>
+CraphOnVector<T1, T2, K>::CraphOnVector(int ko, int reb) {
+  this->kolvo = ko;
+  this->reb = reb;
+}
+
+template <typename T1, typename T2, typename K>
+int CraphOnVector<T1, T2, K>::RetV() {
+  return kolvo;
+}
+
+int main(void) {
+  int n;
+  int m;
+  int a;
+  int b;
+  cin >> n >> m;
+  cin >> a >> b;
+  Graph<int, int, int> *B = nullptr;
+  CraphOnVector<int, int, int> A(n, m);
+  B = &A;
+  B->SetWay(a, b);
+  B->SetV();
+  B->BFS(a);
+  B->Rez();
   return 0;
 }
