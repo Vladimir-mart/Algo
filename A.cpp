@@ -56,7 +56,7 @@ private:
       pos = poz;
     }
     Iterator &operator++() {
-      if(ggg[v].size() > pos) {
+      if(ggg[v].size()+1 >= pos) {
         *p = *(p+1);
         pos++;
       }
@@ -80,6 +80,9 @@ private:
     }
     Iterator &operator=(const Iterator &other) {
       p = other.p;
+      pos = other.pos;
+      ggg = other.ggg;
+      v = other.v;
       return *this;
     }
   };
@@ -180,8 +183,14 @@ int main(void) {
   B->SetV();
   B->BFS(a);
   B->Rez();
-  for(auto it = A.begin(1); it!=A.end(1); ++it) {
-    cout << *it << " ";
+  if (A.begin(1) == A.begin(1)) {
+    cout << "\n111111" << '\n';
+
+    cout << *(++++A.begin(1)) << '\n';
+    cout << *A.end(1);
   }
+  // for(auto it = A.begin(1); it!=A.end(1); ++it) {
+  //   cout << *it << " ";
+  // }
   return 0;
 }
