@@ -183,7 +183,7 @@ int main(void) {
   B->SetV();
   B->BFS(a);
   B->Rez();
-  if (A.begin(1) == A.begin(1)) {
+  if (++A.begin(1) == ++A.begin(1)) {
     cout << "\n111111" << '\n';
 
     cout << *(++++A.begin(1)) << '\n';
