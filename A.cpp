@@ -18,7 +18,6 @@ public:
   virtual void SetWay(T1, T2) = 0;
   virtual void BFS(T1) = 0;
   virtual void Rez() = 0;
-
 private:
 };
 
@@ -41,6 +40,48 @@ private:
   int v;
   vector<int> dist, parent;
   vector<vector<int>> g;
+  public:
+  // тестовый итератор для списка, для матрицы будет масло мажу маслом
+  template <typename T>
+  class Iterator : public std::iterator<std::input_iterator_tag, T> {
+    int* p = nullptr; 
+    int v = 0;
+    int pos = 0;
+    Iterator() : p(nullptr) {}
+    Iterator(const Iterator& st) : p(st.p) {}
+    Iterator(T1 t) : p(&g[t][0]), v(t) {}
+    Iterator &operator++() {
+      if(g[v].size() > pos) {
+        *p = *(p+1);
+        pos++;
+      }
+      return *this;
+    }
+    Iterator &operator--() {
+      if(pos >= 0) {
+        *p = *(p-1);
+        pos--;
+      }
+      return *this;
+    }
+    friend bool operator==(Iterator first, Iterator second) {
+      return first.it_ == second.it_;
+    }
+    friend bool operator!=(Iterator first, Iterator second) {
+      return !(first == second);
+    }
+    Iterator &operator=(const Iterator &other) {
+      p = other.p;
+      return *this;
+    }
+  };
+ public:
+  Iterator<T1> begin(int t) {
+    return Iterator<T1>(g[t]);
+  }
+  Iterator<T1> end(int t) {
+    return Iterator<T1>(g[t][g[t].size()-1]);
+  }
 };
 
 template <typename T1, typename T2, typename K>
@@ -131,5 +172,6 @@ int main(void) {
   B->SetV();
   B->BFS(a);
   B->Rez();
+  A.begin(1);
   return 0;
 }
