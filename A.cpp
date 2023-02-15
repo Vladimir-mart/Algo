@@ -38,24 +38,32 @@ private:
   T2 finish;
   int u;
   int v;
-  vector<int> dist, parent;
-  vector<vector<int>> g;
-  public:
+  vector<T1> dist, parent;
+  vector<vector<T1>> g;
   // тестовый итератор для списка, для матрицы будет масло мажу маслом
   template <typename T>
   class Iterator : public std::iterator<std::input_iterator_tag, T> {
+   public:
     int* p = nullptr; 
+    vector<vector<T1>> ggg;
     int v = 0;
     int pos = 0;
     Iterator() : p(nullptr) {}
     Iterator(const Iterator& st) : p(st.p) {}
-    Iterator(T1 t) : p(&g[t][0]), v(t) {}
+    explicit Iterator(T t, T poz, vector<vector<T1>>& gg) {
+      p = &gg[t][poz];
+      ggg = gg;
+      pos = poz;
+    }
     Iterator &operator++() {
-      if(g[v].size() > pos) {
+      if(ggg[v].size() > pos) {
         *p = *(p+1);
         pos++;
       }
       return *this;
+    }
+    int &operator*() { 
+      return *p; 
     }
     Iterator &operator--() {
       if(pos >= 0) {
@@ -65,7 +73,7 @@ private:
       return *this;
     }
     friend bool operator==(Iterator first, Iterator second) {
-      return first.it_ == second.it_;
+      return first.p == second.p;
     }
     friend bool operator!=(Iterator first, Iterator second) {
       return !(first == second);
@@ -76,11 +84,11 @@ private:
     }
   };
  public:
-  Iterator<T1> begin(int t) {
-    return Iterator<T1>(g[t]);
+  Iterator<T1> begin(T1 t) {
+    return Iterator<T1>(t,0, g);
   }
-  Iterator<T1> end(int t) {
-    return Iterator<T1>(g[t][g[t].size()-1]);
+  Iterator<T1> end(T1 t) {
+    return Iterator<T1>(t,g[t][g[t].size()-1], g);
   }
 };
 
@@ -172,6 +180,8 @@ int main(void) {
   B->SetV();
   B->BFS(a);
   B->Rez();
-  A.begin(1);
+  for(auto it = A.begin(1); it!=A.end(1); ++it) {
+    cout << *it << " ";
+  }
   return 0;
 }
