@@ -335,21 +335,21 @@ void HolVisitor::visitP(int v, int to) { perent[to] = v; }
 vector<int> Rez(Visitor *vis, int finish) {
   if (vis->Retperent(finish) == -1) {
     if (vis->Retdist(finish) == 0) {
-      cout << "0\n" << finish;
+      vector<int> path(1, finish);
+      cout << "0\n";
+      return path;
     } else {
       vector<int> path(1, -1);
       return path;
-      cout << "-1\n";
     }
-  } else {
-    cout << vis->Retdist(finish) << '\n';
-    vector<int> path(1, finish);
-    while (vis->Retperent(finish) != -1) {
-      finish = vis->Retperent(finish);
-      path.push_back(finish);
-    }
-    return path;
   }
+  cout << vis->Retdist(finish) << '\n';
+  vector<int> path(1, finish);
+  while (vis->Retperent(finish) != -1) {
+    finish = vis->Retperent(finish);
+    path.push_back(finish);
+  }
+  return path;
 }
 // вот БФС со всеми введениями, почему CraphOnVector, ну у меня там класс
 // итератора, begin и end до них ни как не достучатся от Craph
