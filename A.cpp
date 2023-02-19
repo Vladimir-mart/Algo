@@ -1,3 +1,4 @@
+
 #include <cstdio>
 #include <iostream>
 #include <queue>
@@ -11,11 +12,12 @@ using std::vector;
 template <typename T1, typename T2, typename K> class Graph {
 public:
   virtual int RetV() = 0;
-  virtual vector<T1> RetS(T1) = 0;
+  virtual vector<T1> RetS(T1 a) = 0;
   virtual void SetV() = 0;
-  virtual void SetWay(T1, T2) = 0;
-  virtual int stat() = 0;
-  virtual int fin() = 0;
+  virtual void SetWay(T1 a, T2 b) = 0;
+
+  virtual int Stat() = 0;
+  virtual int Fin() = 0;
 };
 
 template <typename T1, typename T2, typename K>
@@ -25,12 +27,83 @@ public:
   int RetV();
   vector<T1> RetS(T1 a);
   void SetV();
-  void SetWay(T1, T2);
-  void BFS(T1);
-  void Rez();
-  int stat() { return start; }
-  int fin() { return finish; }
+  void SetWay(T1 a, T2 b);
+  int Stat() { return start; }
+  int Fin() { return finish; }
 
+  class OnIter {
+    //std::iterator<std::input_iterator_tag>
+  public:
+    int* sp = nullptr;
+    int* fp = nullptr;
+    OnIter(int* a, int* b) {
+      sp = a;
+      fp = b;
+    }
+    class Iterator {
+    public:
+      int* p = nullptr;
+      int v = 0;
+      int pos = 0;
+      Iterator() : p(nullptr) {}
+      Iterator(int* pp) {
+        p = pp;
+      }
+      Iterator(const Iterator& st) {
+        p = st.p;
+        pos = st.pos;
+        v = st.v;
+      }
+      Iterator& operator++() {
+        for (int i = 0; *p != -1; ++pos, ++i) {
+          if (*p == 1 and i > 0) {
+            break;
+          }
+          else {
+            p = (p + 1);
+          }
+        }
+        return *this;
+      }
+      int& operator*() { return pos; }
+      Iterator& operator--() {
+        for (int i = 0; pos >= 0; --pos, ++i) {
+          if (*p == 1 and i > 0) {
+            break;
+          }
+          else {
+            p = (p - 1);
+          }
+        }
+        return *this;
+      }
+      friend bool operator==(Iterator first, Iterator second) {
+        return first.p == second.p;
+      }
+      friend bool operator!=(Iterator first, Iterator second) {
+        return !(first == second);
+      }
+      Iterator& operator=(const Iterator& other) {
+        p = other.p;
+        pos = other.pos;
+        v = other.v;
+        return *this;
+      }
+    };
+    Iterator begin() {
+      Iterator temp(sp);
+      if (*sp == 0) {
+        ++temp;
+      }
+      return temp;
+    }
+    Iterator end() {
+      return Iterator(fp);
+    }
+  };
+  OnIter RangeB(T1 ver) {
+    return OnIter(&g[ver][0], &g[ver][g[ver].size() - 1]);
+  }
 private:
   int kolvo = 0;
   int reb = 0;
@@ -40,70 +113,6 @@ private:
   int v;
   vector<T1> dist, parent;
   vector<vector<T1>> g;
-  template <typename T> class Iterator {
-  public:
-    int *p = nullptr;
-    vector<vector<T1>> ggg;
-    int v = 0;
-    int pos = 0;
-    Iterator() : p(nullptr) {}
-    Iterator(const Iterator &st) {
-      p = st.p;
-      ggg = st.ggg;
-      pos = st.pos;
-      v = st.v;
-    }
-    explicit Iterator(T t, T poz, vector<vector<T1>> &gg) {
-      p = &gg[t][poz];
-      ggg = gg;
-      pos = poz;
-      v = t;
-    }
-    Iterator &operator++() {
-      for (int i = 0; pos < ggg[v].size(); ++pos, ++i) {
-        if (*p == -1) {
-          break;
-        }
-        if (*p == 1 and i > 0) {
-          break;
-        } else {
-          p = (p + 1);
-        }
-      }
-      return *this;
-    }
-    int &operator*() { return pos; }
-    Iterator &operator--() {
-      for (int i = 0; pos >= 0; --pos, ++i) {
-        if (*p == 1 and i > 0) {
-          break;
-        } else {
-          p = (p - 1);
-        }
-      }
-      return *this;
-    }
-    friend bool operator==(Iterator first, Iterator second) {
-      return first.p == second.p;
-    }
-    friend bool operator!=(Iterator first, Iterator second) {
-      return !(first == second);
-    }
-    Iterator &operator=(const Iterator &other) {
-      p = other.p;
-      pos = other.pos;
-      ggg = other.ggg;
-      v = other.v;
-      return *this;
-    }
-  };
-
-public:
-  Iterator<T1> begin(T1 t) {
-    Iterator<T1> temp(t, 0, g);
-    return ++temp;
-  }
-  Iterator<T1> end(T1 t) { return Iterator<T1>(t, g[t].size() - 1, g); }
 };
 
 template <typename T1, typename T2, typename K>
@@ -122,7 +131,7 @@ void CraphOnMatrix<T1, T2, K>::SetV() {
     g[u][v] = 1;
     g[v][u] = 1;
   }
-  for (int i = 0; i < kolvo; ++i) {
+  for (int i = 0; i <= kolvo; ++i) {
     g[i].push_back(-1);
   }
 }
@@ -152,12 +161,74 @@ public:
   int RetV();
   vector<T1> RetS(T1 a);
   void SetV();
-  void SetWay(T1, T2);
-  void BFS(T1);
-  void Rez();
-  int stat() { return start; }
-  int fin() { return finish; }
-
+  void SetWay(T1 a, T2 b);
+  int Stat() { return start; }
+  int Fin() { return finish; }
+  class OnIter {
+    //std::iterator<std::input_iterator_tag>
+  public:
+    int* sp = nullptr;
+    int* fp = nullptr;
+    OnIter(int* a, int* b) {
+      sp = a;
+      fp = b;
+    }
+    class Iterator {
+    public:
+      int* p = nullptr;
+      int v = 0;
+      int pos = 0;
+      Iterator() : p(nullptr) {}
+      Iterator(int* pp) {
+        p = pp;
+      }
+      Iterator(const Iterator& st) {
+        p = st.p;
+        pos = st.pos;
+        v = st.v;
+      }
+      Iterator& operator++() {
+        if (*p != -1) {
+          p = (p + 1);
+          pos++;
+        }
+        return *this;
+      }
+      int& operator*() { return *p; }
+      Iterator& operator--() {
+        if (pos >= 0) {
+          p = (p - 1);
+          pos--;
+        }
+        return *this;
+      }
+      friend bool operator==(Iterator first, Iterator second) {
+        return first.p == second.p;
+      }
+      friend bool operator!=(Iterator first, Iterator second) {
+        return !(first == second);
+      }
+      Iterator& operator=(const Iterator& other) {
+        p = other.p;
+        pos = other.pos;
+        v = other.v;
+        return *this;
+      }
+    };
+    Iterator begin() {
+      Iterator temp(sp);
+      if (*sp == 0) {
+        ++temp;
+      }
+      return temp;
+    }
+    Iterator end() {
+      return Iterator(fp);
+    }
+  };
+  OnIter RangeB(T1 ver) {
+    return OnIter(&g[ver][0], &g[ver][g[ver].size() - 1]);
+  }
 private:
   int kolvo = 0;
   int reb = 0;
@@ -168,103 +239,11 @@ private:
   vector<T1> dist, parent;
   vector<vector<T1>> g;
   // зачем я это делал,? - не знаю
-  template <typename T> class Iterator {
-  public:
-    int *p = nullptr;
-    vector<vector<T1>> ggg;
-    int v = 0;
-    int pos = 0;
-    Iterator() : p(nullptr) {}
-    Iterator(const Iterator &st) : p(st.p) {}
-    explicit Iterator(T t, T poz, vector<vector<T1>> &gg) {
-      p = &gg[t][poz];
-      ggg = gg;
-      pos = poz;
-      v = t;
-    }
-    Iterator &operator++() {
-      if (ggg[v].size() > pos) {
-        p = (p + 1);
-        pos++;
-      }
-      return *this;
-    }
-    int &operator*() { return *p; }
-    Iterator &operator--() {
-      if (pos >= 0) {
-        p = (p - 1);
-        pos--;
-      }
-      return *this;
-    }
-    friend bool operator==(Iterator first, Iterator second) {
-      return first.p == second.p;
-    }
-    friend bool operator!=(Iterator first, Iterator second) {
-      return !(first == second);
-    }
-    Iterator &operator=(const Iterator &other) {
-      p = other.p;
-      pos = other.pos;
-      ggg = other.ggg;
-      v = other.v;
-      return *this;
-    }
-  };
-
-public:
-  Iterator<T1> begin(T1 t) { return Iterator<T1>(t, 0, g); }
-  Iterator<T1> end(T1 t) { return Iterator<T1>(t, g[t].size() - 1, g); }
 };
 
 template <typename T1, typename T2, typename K>
 vector<T1> CraphOnVector<T1, T2, K>::RetS(T1 a) {
   return g[a];
-}
-
-// это не нужный рез, смотрите 335
-template <typename T1, typename T2, typename K>
-void CraphOnVector<T1, T2, K>::Rez() {
-  if (parent[finish] == -1) {
-    if (dist[finish] == 0) {
-      cout << "0\n" << finish;
-    } else {
-      cout << "-1\n";
-    }
-  } else {
-    cout << dist[finish] << '\n';
-    vector<int> path(1, finish);
-    while (parent[finish] != -1) {
-      finish = parent[finish];
-      path.push_back(finish);
-    }
-    for (int i = int(path.size() - 1); i >= 0; i--) {
-      cout << path[i] << " ";
-    }
-  }
-}
-
-// это не нужный бфс, смотрите 356
-template <typename T1, typename T2, typename K>
-void CraphOnVector<T1, T2, K>::BFS(T1 start) {
-
-  parent = vector<T1>(kolvo + 1, -1);
-  dist = vector<T1>(kolvo + 1, -1);
-  dist[start] = 0;
-  queue<T1> q;
-  q.push(start);
-  while (!q.empty()) {
-    int v = q.front();
-    q.pop();
-    for (int i = 0; i < int(g[v].size()); i++) {
-      int to = g[v][i];
-      if (dist[to] == -1) {
-        q.push(to);
-        dist[to] = dist[v] + 1;
-        parent[to] = v;
-      }
-    }
-  }
 }
 
 template <typename T1, typename T2, typename K>
@@ -299,8 +278,8 @@ int CraphOnVector<T1, T2, K>::RetV() {
 
 class Visitor {
 public:
-  virtual void visitP(int v, int to) = 0;
-  virtual void visitD(int v, int to) = 0;
+  virtual void Pvisit(int v, int to) = 0;
+  virtual void Dvisit(int v, int to) = 0;
   virtual int Retperent(int v) = 0;
   virtual int Retdist(int v) = 0;
 };
@@ -312,13 +291,13 @@ private:
 
 public:
   HolVisitor(int kolvo);
-  void visitP(int v, int to) override;
-  void visitD(int v, int to) override;
+  void Pvisit(int v, int to) override;
+  void Dvisit(int v, int to) override;
   int Retperent(int v) override;
   int Retdist(int v) override;
 };
 
-void HolVisitor::visitD(int v, int to) { dist[to] = v; }
+void HolVisitor::Dvisit(int v, int to) { dist[to] = v; }
 
 int HolVisitor::Retdist(int v) { return dist[v]; }
 
@@ -329,16 +308,17 @@ HolVisitor::HolVisitor(int kolvo) {
   dist.resize(kolvo + 1, -1);
 }
 
-void HolVisitor::visitP(int v, int to) { perent[to] = v; }
+void HolVisitor::Pvisit(int v, int to) { perent[to] = v; }
 
 // дополнение к бфс
-vector<int> Rez(Visitor *vis, int finish) {
+vector<int> Rez(Visitor* vis, int finish) {
   if (vis->Retperent(finish) == -1) {
     if (vis->Retdist(finish) == 0) {
       vector<int> path(1, finish);
       cout << "0\n";
       return path;
-    } else {
+    }
+    else {
       vector<int> path(1, -1);
       return path;
     }
@@ -353,25 +333,30 @@ vector<int> Rez(Visitor *vis, int finish) {
 }
 // вот БФС со всеми введениями, почему CraphOnVector, ну у меня там класс
 // итератора, begin и end до них ни как не достучатся от Craph
-vector<int> Bfs(Visitor *vis, CraphOnVector<int, int, int> &st) {
+vector<int> Bfs(Visitor* vis, CraphOnVector<int, int, int>& st) {
   // из дефолта, сказали как нибудь
-  vis->visitD(0, st.stat());
+  vis->Dvisit(0, st.Stat());
   queue<int> q;
-  q.push(st.stat());
+  q.push(st.Stat());
   while (!q.empty()) {
     int v = q.front();
     q.pop();
-    // знаю, что в векторе есть итератор, но я захотел так, если надо могу
-    // переписать(ни надо /\)
-    for (auto it = st.begin(v); it != st.end(v); ++it) {
-      if (vis->Retdist(*it) == -1) {
-        q.push(*it);
-        vis->visitD(vis->Retdist(v) + 1, *it);
-        vis->visitP(v, *it);
+
+    for (auto it : st.RangeB(v)) {
+      if (vis->Retdist(it) == -1) {
+        q.push(it);
+        vis->Dvisit(vis->Retdist(v) + 1, it);
+        vis->Pvisit(v, it);
       }
     }
   }
-  return Rez(vis, st.fin());
+/*
+*   Хитро?
+    for (auto iter : st.RetS(v)) {
+      iter = 10; // но это будет не работать
+    }
+*/
+  return Rez(vis, st.Fin());
 }
 
 int main() {
@@ -381,18 +366,40 @@ int main() {
   int b;
   cin >> n >> m;
   cin >> a >> b;
-  Graph<int, int, int> *B = nullptr;
+  // Graph<int, int, int> *B = nullptr;
+  // CraphOnVector<int, int, int> A(n, m);
+  // B = &A;
+  // B->SetWay(a, b);
+  // B->SetV();
+  // B->BFS(a);
+  // B->Rez();
+  // A.SetWay(a, b);
+  // 
+  // Visitor *v;
+  // HolVisitor hv(n);
+  // v = &hv;
+  // vector<int> path = Bfs(v, A);
+  // for (int i = int(path.size() - 1); i >= 0; i--) {
+  //   cout << path[i] << " ";
+  // }
+// Матрица работате
+/*
+  CraphOnMatrix<int, int, int> A(n, m);
+  A.SetWay(a, b);
+  A.SetV();
+  for (auto itt : A.RangeB(1)) {
+    cout << itt;
+  }
+*/
+// Список работате
+/*
   CraphOnVector<int, int, int> A(n, m);
   A.SetWay(a, b);
   A.SetV();
-  Visitor *v;
-  HolVisitor hv(n);
-  v = &hv;
-  vector<int> path = Bfs(v, A);
-  for (int i = int(path.size() - 1); i >= 0; i--) {
-    cout << path[i] << " ";
+  for (auto itt : A.RangeB(1)) {
+    cout << itt;
   }
-
+*/
   return 0;
 }
 
@@ -400,3 +407,4 @@ int main() {
 * P.S
   знаю, много говна и не правильно, но я не понял ревью и не кодил год
 */
+
