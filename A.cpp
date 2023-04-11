@@ -10,11 +10,11 @@ using std::vector;
 
 template <typename T1, typename T2, typename K> class Graph {
 public:
-  virtual int RetV() = 0;
-  virtual vector<T1> RetS(T1 a) = 0;
+  virtual int RetQuantive() = 0;
+  virtual vector<T1> RetAdjacent(T1 ver) = 0;
   virtual void SetV() = 0;
-  virtual void SetWay(T1 a, T2 b) = 0;
-  virtual int Stat() = 0;
+  virtual void SetWay(T1 start, T2 finish) = 0;
+  virtual int Start() = 0;
   virtual int Fin() = 0;
 };
 
@@ -22,23 +22,23 @@ template <typename T1, typename T2, typename K>
 class GraphOnMatrix : public Graph<T1, T2, K> {
 public:
   GraphOnMatrix(int ko, int reb);
-  int RetV();
-  vector<T1> RetS(T1 a);
+  int RetQuantive();
+  vector<T1> RetAdjacent(T1 ver);
   void SetV();
-  void SetWay(T1 a, T2 b);
-  int Stat() { return start; }
+  void SetWay(T1 start, T2 finish);
+  int Start() { return start; }
   int Fin() { return finish; }
 
   class OnIter {
   public:
-    int* sp = nullptr;
-    int* fp = nullptr;
-    OnIter(int* a, int* b);
+    int* fir_point = nullptr;
+    int* last_point = nullptr;
+    OnIter(int* first, int* last);
     class Iterator {
     public:
-      Iterator() : p(nullptr) {}
-      Iterator(int* pp) { p = pp; }
-      Iterator(const Iterator& st) : p(st.p), pos(st.pos), v(st.pos) {}
+      Iterator() : point(nullptr) {}
+      Iterator(int* temp_point) { point = temp_point; }
+      Iterator(const Iterator& temp_iter) : point(temp_iter.point), pos(temp_iter.pos){}
       Iterator& operator++();
       int& operator*();
       Iterator& operator--();
@@ -46,24 +46,24 @@ public:
       friend bool operator==(Iterator first, Iterator second);
       friend bool operator!=(Iterator first, Iterator second);
     private:
-      int* p = nullptr;
-      int v = 0;
+      int* point = nullptr;
       int pos = 0;
     };
     Iterator begin();
-    Iterator end() { return Iterator(fp); }
+    Iterator end() { return Iterator(last_point); }
   };
   OnIter RangeB(T1 ver);
 
 private:
-  int kolvo = 0;
+  int quantity_ver = 0;
   int reb = 0;
   T1 start = 0;
   T2 finish = 0;
   int t_from = 0;
   int t_to = 0;
-  vector<T1> dist, parent;
-  vector<vector<T1>> g;
+  vector<T1> dist;
+  vector<T1> parent;
+  vector<vector<T1>> graph_;
 };
 
 
@@ -76,35 +76,34 @@ bool operator!=(typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator first, typen
 
 template <typename T1, typename T2, typename K>
 bool operator==(typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator first, typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator second) {
-  return first.p == second.p;
+  return first.point == second.point;
 }
 
 template <typename T1, typename T2, typename K>
 typename GraphOnMatrix<T1, T2, K>::OnIter GraphOnMatrix<T1, T2, K>::RangeB(T1 ver) {
-  return OnIter(&g[ver][0], &g[ver][g[ver].size() - 1]);
+  return OnIter(&graph_[ver][0], &graph_[ver][graph_[ver].size() - 1]);
 }
 
 template <typename T1, typename T2, typename K>
 typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator GraphOnMatrix<T1, T2, K>::OnIter::begin() {
-  Iterator temp(sp);
-  if (*sp == 0) {
+  Iterator temp(fir_point);
+  if (*fir_point == 0) {
     ++temp;
   }
   return temp;
 }
 
 template <typename T1, typename T2, typename K>
-GraphOnMatrix<T1, T2, K>::OnIter::OnIter(int* a, int* b) {
-  sp = a;
-  fp = b;
+GraphOnMatrix<T1, T2, K>::OnIter::OnIter(int* first, int* last) {
+  fir_point = first;
+  last_point = last;
 }
 
 template <typename T1, typename T2, typename K>
 typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator&
 GraphOnMatrix<T1, T2, K>::OnIter::Iterator::operator=(const Iterator& other) {
-  p = other.p;
+  point = other.point;
   pos = other.pos;
-  v = other.v;
   return *this;
 }
 
@@ -112,11 +111,11 @@ template <typename T1, typename T2, typename K>
 typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator&
 GraphOnMatrix<T1, T2, K>::OnIter::Iterator::operator--() {
   for (int i = 0; pos >= 0; --pos, ++i) {
-    if (*p == 1 and i > 0) {
+    if (*point == 1 and i > 0) {
       break;
     }
     else {
-      p = (p - 1);
+      point = (point - 1);
     }
   }
   return *this;
@@ -130,83 +129,82 @@ int& GraphOnMatrix<T1, T2, K>::OnIter::Iterator::operator*() {
 template <typename T1, typename T2, typename K>
 typename GraphOnMatrix<T1, T2, K>::OnIter::Iterator&
 GraphOnMatrix<T1, T2, K>::OnIter::Iterator::operator++() {
-  for (int i = 0; *p != -1; ++pos, ++i) {
-    if (*p == 1 and i > 0) {
+  for (int i = 0; *point != -1; ++pos, ++i) {
+    if (*point == 1 and i > 0) {
       break;
     }
     else {
-      p = (p + 1);
+      point = (point + 1);
     }
   }
   return *this;
 }
 
 template <typename T1, typename T2, typename K>
-vector<T1> GraphOnMatrix<T1, T2, K>::RetS(T1 a) {
-  return g[a];
+vector<T1> GraphOnMatrix<T1, T2, K>::RetAdjacent(T1 ver) {
+  return graph_[ver];
 }
 
 template <typename T1, typename T2, typename K>
 void GraphOnMatrix<T1, T2, K>::SetV() {
-  g.resize(kolvo + 1);
-  for (int i = 0; i <= kolvo; ++i) {
-    g[i].resize(kolvo + 1);
+  graph_.resize(quantity_ver + 1);
+  for (int i = 0; i <= quantity_ver; ++i) {
+    graph_[i].resize(quantity_ver + 1);
   }
   for (int j = 0; j < reb; ++j) {
     cin >> t_from >> t_to;
-    g[t_from][t_to] = 1;
-    g[t_to][t_from] = 1;
+    graph_[t_from][t_to] = 1;
+    graph_[t_to][t_from] = 1;
   }
-  for (int i = 0; i <= kolvo; ++i) {
-    g[i].push_back(-1);
+  for (int i = 0; i <= quantity_ver; ++i) {
+    graph_[i].push_back(-1);
   }
 }
 
 template <typename T1, typename T2, typename K>
-void GraphOnMatrix<T1, T2, K>::SetWay(T1 a, T2 b) {
-  this->start = a;
-  this->finish = b;
+void GraphOnMatrix<T1, T2, K>::SetWay(T1 start, T2 finish) {
+  this->start = start;
+  this->finish = finish;
 }
 
 template <typename T1, typename T2, typename K>
 GraphOnMatrix<T1, T2, K>::GraphOnMatrix(int ko, int reb) {
-  this->kolvo = ko;
+  this->quantity_ver = ko;
   this->reb = reb;
 }
 
 template <typename T1, typename T2, typename K>
-int GraphOnMatrix<T1, T2, K>::RetV() {
-  return kolvo;
+int GraphOnMatrix<T1, T2, K>::RetQuantive() {
+  return quantity_ver;
 }
 
 template <typename T1, typename T2, typename K>
 class GraphOnVector : public Graph<T1, T2, K> {
 public:
   GraphOnVector(int ko, int reb);
-  int RetV();
-  vector<T1> RetS(T1 a);
+  int RetQuantive();
+  vector<T1> RetAdjacent(T1 ver);
   void SetV();
-  void SetWay(T1 a, T2 b);
-  int Stat() { return start; }
+  void SetWay(T1 start, T2 finish);
+  int Start() { return start; }
   int Fin() { return finish; }
   class OnIter {
   public:
-    int* sp = nullptr;
-    int* fp = nullptr;
-    OnIter(int* a, int* b);
+    int* fir_point = nullptr;
+    int* last_point = nullptr;
+    OnIter(int* first, int* last);
     class Iterator {
     public:
-      int* p = nullptr;
-      int v = 0;
+      int* point = nullptr;
       int pos = 0;
-      Iterator() : p(nullptr) {}
-      Iterator(int* pp) { p = pp; }
-      Iterator(const Iterator& st);
+      Iterator() : point(nullptr) {}
+      Iterator(int* temp_point) { point = temp_point; }
+      Iterator(const Iterator& temp_iter);
       Iterator& operator++();
-      int& operator*() { return *p; }
+      int& operator*() { return *point; }
       Iterator& operator--();
       friend bool operator==(Iterator first, Iterator second) {
-        return first.p == second.p;
+        return first.point == second.point;
       }
       friend bool operator!=(Iterator first, Iterator second) {
         return !(first == second);
@@ -214,27 +212,28 @@ public:
       Iterator& operator=(const Iterator& other);
     };
     Iterator begin();
-    Iterator end() { return Iterator(fp); }
+    Iterator end() { return Iterator(last_point); }
   };
   OnIter RangeB(T1 ver) {
-    return OnIter(&g[ver][0], &g[ver][g[ver].size() - 1]);
+    return OnIter(&graph_[ver][0], &graph_[ver][graph_[ver].size() - 1]);
   }
 
 private:
-  int kolvo = 0;
+  int quantity_ver = 0;
   int reb = 0;
   T1 start = 0;
   T2 finish = 0;
   int t_from = 0;
   int t_to = 0;
-  vector<T1> dist, parent;
-  vector<vector<T1>> g;
+  vector<T1> dist;
+  vector<T1> parent;
+  vector<vector<T1>> graph_;
 };
 
 template <typename T1, typename T2, typename K>
 typename GraphOnVector<T1, T2, K>::OnIter::Iterator GraphOnVector<T1, T2, K>::OnIter::begin() {
-  Iterator temp(sp);
-  if (*sp == 0) {
+  Iterator temp(fir_point);
+  if (*fir_point == 0) {
     ++temp;
   }
   return temp;
@@ -242,16 +241,15 @@ typename GraphOnVector<T1, T2, K>::OnIter::Iterator GraphOnVector<T1, T2, K>::On
 
 template <typename T1, typename T2, typename K>
 typename GraphOnVector<T1, T2, K>::OnIter::Iterator& GraphOnVector<T1, T2, K>::OnIter::Iterator::operator=(const typename GraphOnVector<T1, T2, K>::OnIter::Iterator& other) {
-  p = other.p;
+  point = other.point;
   pos = other.pos;
-  v = other.v;
   return *this;
 }
 
 template <typename T1, typename T2, typename K>
 typename GraphOnVector<T1, T2, K>::OnIter::Iterator& GraphOnVector<T1, T2, K>::OnIter::Iterator::operator--() {
   if (pos >= 0) {
-    p = (p - 1);
+    point = (point - 1);
     pos--;
   }
   return *this;
@@ -259,41 +257,40 @@ typename GraphOnVector<T1, T2, K>::OnIter::Iterator& GraphOnVector<T1, T2, K>::O
 
 template <typename T1, typename T2, typename K>
 typename GraphOnVector<T1, T2, K>::OnIter::Iterator& GraphOnVector<T1, T2, K>::OnIter::Iterator::operator++() {
-  if (*p != -1) {
-    p = (p + 1);
+  if (*point != -1) {
+    point = (point + 1);
     pos++;
   }
   return *this;
 }
 
 template <typename T1, typename T2, typename K>
-GraphOnVector<T1, T2, K>::OnIter::Iterator::Iterator(const typename GraphOnVector<T1, T2, K>::OnIter::Iterator& st) {
-  p = st.p;
-  pos = st.pos;
-  v = st.v;
+GraphOnVector<T1, T2, K>::OnIter::Iterator::Iterator(const typename GraphOnVector<T1, T2, K>::OnIter::Iterator& temp_iter) {
+  point = temp_iter.point;
+  pos = temp_iter.pos;
 }
 
 template <typename T1, typename T2, typename K>
-GraphOnVector<T1, T2, K>::OnIter::OnIter(int* a, int* b) {
-  sp = a;
-  fp = b;
+GraphOnVector<T1, T2, K>::OnIter::OnIter(int* first, int* last) {
+  fir_point = first;
+  last_point = last;
 }
 
 template <typename T1, typename T2, typename K>
-vector<T1> GraphOnVector<T1, T2, K>::RetS(T1 a) {
-  return g[a];
+vector<T1> GraphOnVector<T1, T2, K>::RetAdjacent(T1 ver) {
+  return graph_[ver];
 }
 
 template <typename T1, typename T2, typename K>
 void GraphOnVector<T1, T2, K>::SetV() {
-  g.resize(kolvo + 1);
+  graph_.resize(quantity_ver + 1);
   for (int j = 0; j < reb; ++j) {
     cin >> t_from >> t_to;
-    g[t_from].push_back(t_to);
-    g[t_to].push_back(t_from);
+    graph_[t_from].push_back(t_to);
+    graph_[t_to].push_back(t_from);
   }
-  for (int i = 0; i <= kolvo; ++i) {
-    g[i].push_back(-1);
+  for (int i = 0; i <= quantity_ver; ++i) {
+    graph_[i].push_back(-1);
   }
 }
 
@@ -305,21 +302,21 @@ void GraphOnVector<T1, T2, K>::SetWay(T1 a, T2 b) {
 
 template <typename T1, typename T2, typename K>
 GraphOnVector<T1, T2, K>::GraphOnVector(int ko, int reb) {
-  this->kolvo = ko;
+  this->quantity_ver = ko;
   this->reb = reb;
 }
 
 template <typename T1, typename T2, typename K>
-int GraphOnVector<T1, T2, K>::RetV() {
-  return kolvo;
+int GraphOnVector<T1, T2, K>::RetQuantive() {
+  return quantity_ver;
 }
 
 class Visitor {
 public:
-  virtual void Pvisit(int v, int to) = 0;
-  virtual void Dvisit(int v, int to) = 0;
-  virtual int Retperent(int v) = 0;
-  virtual int Retdist(int v) = 0;
+  virtual void Pvisit(int vertex, int to) = 0;
+  virtual void Dvisit(int vertex, int to) = 0;
+  virtual int Retperent(int vertex) = 0;
+  virtual int Retdist(int vertex) = 0;
 };
 
 class HolVisitor : public Visitor {
@@ -327,25 +324,25 @@ private:
   vector<int> dist;
   vector<int> perent;
 public:
-  HolVisitor(int kolvo);
-  void Pvisit(int v, int to) override;
-  void Dvisit(int v, int to) override;
-  int Retperent(int v) override;
-  int Retdist(int v) override;
+  HolVisitor(int quantity_ver);
+  void Pvisit(int vertex, int to) override;
+  void Dvisit(int vertex, int to) override;
+  int Retperent(int vertex) override;
+  int Retdist(int vertex) override;
 };
 
-void HolVisitor::Dvisit(int v, int to) { dist[to] = v; }
+void HolVisitor::Dvisit(int vertex, int to) { dist[to] = vertex; }
 
-int HolVisitor::Retdist(int v) { return dist[v]; }
+int HolVisitor::Retdist(int vertex) { return dist[vertex]; }
 
-int HolVisitor::Retperent(int v) { return perent[v]; }
+int HolVisitor::Retperent(int vertex) { return perent[vertex]; }
 
-HolVisitor::HolVisitor(int kolvo) {
-  perent.resize(kolvo + 1, -1);
-  dist.resize(kolvo + 1, -1);
+HolVisitor::HolVisitor(int quantity_ver) {
+  perent.resize(quantity_ver + 1, -1);
+  dist.resize(quantity_ver + 1, -1);
 }
 
-void HolVisitor::Pvisit(int v, int to) { perent[to] = v; }
+void HolVisitor::Pvisit(int vertex, int to) { perent[to] = vertex; }
 
 // дополнение к бфс
 vector<int> Rez(Visitor* vis, int finish) {
@@ -370,30 +367,30 @@ vector<int> Rez(Visitor* vis, int finish) {
 }
 // тут БФС со всем введениями, а так же второй пункт, я сделал без класса, мне так убдобней
 // принимает граф и визитор, а возвращать вектор вершин(шаблонных), что лежат на пути.
-vector<int> Bfs(Visitor* vis, GraphOnVector<int, int, int>& st) {
+vector<int> Bfs(Visitor* vis, GraphOnVector<int, int, int>& temp_iter) {
   // из дефолта, сказали как нибудь
-  vis->Dvisit(0, st.Stat());
+  vis->Dvisit(0, temp_iter.Start());
   queue<int> q;
-  q.push(st.Stat());
+  q.push(temp_iter.Start());
   while (!q.empty()) {
-    int v = q.front();
+    int vertex = q.front();
     q.pop();
 
-    for (auto it : st.RangeB(v)) {
+    for (auto it : temp_iter.RangeB(vertex)) {
       if (vis->Retdist(it) == -1) {
         q.push(it);
-        vis->Dvisit(vis->Retdist(v) + 1, it);
-        vis->Pvisit(v, it);
+        vis->Dvisit(vis->Retdist(vertex) + 1, it);
+        vis->Pvisit(vertex, it);
       }
     }
   }
   /*
   *   Хитро?
-      for (auto iter : st.RetS(v)) {
+      for (auto iter : temp_iter.RetAdjacent(vertex)) {
         iter = 10; // но это будет не работать
       }
   */
-  return Rez(vis, st.Fin());
+  return Rez(vis, temp_iter.Fin());
 }
 
 
@@ -413,10 +410,10 @@ int main() {
   // B->Rez();
   A.SetWay(a, b);
   A.SetV();
-  Visitor* v;
+  Visitor* vertex;
   HolVisitor hv(n);
-  v = &hv;
-  vector<int> path = Bfs(v, A);
+  vertex = &hv;
+  vector<int> path = Bfs(vertex, A);
   for (int i = int(path.size() - 1); i >= 0; i--) {
     cout << path[i] << " ";
   }
@@ -444,4 +441,6 @@ int main() {
 /*
 * P.S
   знаю, много говна, прошу сильно не бить ♥
+  P.S.S
+  вроде стало меньше
 */
