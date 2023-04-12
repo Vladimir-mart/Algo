@@ -314,7 +314,7 @@ int GraphOnVector<T1, T2, K>::RetQuantive() {
 class Visitor {
 public:
   virtual void Pvisit(int vertex, int to) = 0;
-  virtual void Dvisit(int vertex, int to) = 0;
+  virtual void Dvisit(int dist_on_vertex, int to) = 0;
   virtual int Retperent(int vertex) = 0;
   virtual int Retdist(int vertex) = 0;
 };
@@ -326,12 +326,12 @@ private:
 public:
   HolVisitor(int quantity_ver);
   void Pvisit(int vertex, int to) override;
-  void Dvisit(int vertex, int to) override;
+  void Dvisit(int dist_on_vertex, int to) override;
   int Retperent(int vertex) override;
   int Retdist(int vertex) override;
 };
 
-void HolVisitor::Dvisit(int vertex, int to) { dist[to] = vertex; }
+void HolVisitor::Dvisit(int dist_on_vertex, int to) { dist[to] = dist_on_vertex; }
 
 int HolVisitor::Retdist(int vertex) { return dist[vertex]; }
 
@@ -349,7 +349,7 @@ vector<int> Rez(Visitor* vis, int finish) {
   if (vis->Retperent(finish) == -1) {
     if (vis->Retdist(finish) == 0) {
       vector<int> path(1, finish);
-      cout << "0\n";
+      vis->Dvisit(0,finish);
       return path;
     }
     else {
@@ -357,7 +357,7 @@ vector<int> Rez(Visitor* vis, int finish) {
       return path;
     }
   }
-  cout << vis->Retdist(finish) << '\n';
+  //cout << vis->Retdist(finish)  <<" + "<< finish << '\n';
   vector<int> path(1, finish);
   while (vis->Retperent(finish) != -1) {
     finish = vis->Retperent(finish);
@@ -395,25 +395,28 @@ vector<int> Bfs(Visitor* vis, GraphOnVector<int, int, int>& temp_iter) {
 
 
 int main() {
-  int n;
-  int m;
-  int a;
-  int b;
-  cin >> n >> m;
-  cin >> a >> b;
-  GraphOnVector<int, int, int> A(n, m);
+  int vertexes;
+  int edges;
+  int start;
+  int finish;
+  cin >> vertexes >> edges;
+  cin >> start >> finish;
+  GraphOnVector<int, int, int> garph(vertexes, edges);
   // Graph<int, int, int> *B = nullptr;
   // B = &A;
   // B->SetWay(a, b);
   // B->SetV();
   // B->BFS(a);
   // B->Rez();
-  A.SetWay(a, b);
-  A.SetV();
+  garph.SetWay(start, finish);
+  garph.SetV();
   Visitor* vertex;
-  HolVisitor hv(n);
+  HolVisitor hv(vertexes);
   vertex = &hv;
-  vector<int> path = Bfs(vertex, A);
+  vector<int> path = Bfs(vertex, garph);
+  if (path[0] != -1) {
+    cout << vertex->Retdist(finish) << '\n';
+  }
   for (int i = int(path.size() - 1); i >= 0; i--) {
     cout << path[i] << " ";
   }
