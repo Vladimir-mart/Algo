@@ -13,15 +13,13 @@ using std::priority_queue;
 using std::greater;
 using std::make_pair;
 
-const int kInf = std::numeric_limits<int>::max();
-
 // Матрица почти не поменялась, только вес с 1 на weight и немного итератор 
 template <typename T1, typename T2, typename K> class Graph {
 public:
   virtual int RetQuantive() = 0;
   virtual vector<pair<T1, T2>> RetAdjacent(T1 ver) = 0;
   virtual void SetV() = 0;
-  virtual void SetWay() = 0;
+  virtual void SetWay(int start) = 0;
   virtual int Start() = 0;
   virtual int Fin() = 0;
 };
@@ -123,7 +121,7 @@ GraphOnMatrix<T1, T2, K>::OnIter::Iterator::operator--() {
       break;
     }
     else {
-      point = (point - 1);
+      point -= 1;
     }
   }
   return *this;
@@ -142,7 +140,7 @@ GraphOnMatrix<T1, T2, K>::OnIter::Iterator::operator++() {
       break;
     }
     else {
-      point = (point + 1);
+      point += 1;
     }
   }
   return *this;
@@ -172,7 +170,7 @@ void GraphOnMatrix<T1, T2, K>::SetV() {
 
 template <typename T1, typename T2, typename K>
 void GraphOnMatrix<T1, T2, K>::SetWay(T1 start) {
-  cin >> this->start;
+  this->start = start;
 }
 
 template <typename T1, typename T2, typename K>
@@ -194,7 +192,7 @@ public:
   int RetQuantive();
   vector<pair<T1, T2>> RetAdjacent(T1 ver);
   void SetV();
-  void SetWay();
+  void SetWay(int start);
   int Start() { return start; }
   int Fin() { return finish; }
   class OnIter {
@@ -302,8 +300,8 @@ void GraphOnVector<T1, T2, K>::SetV() {
 }
 
 template <typename T1, typename T2, typename K>
-void GraphOnVector<T1, T2, K>::SetWay() {
-  cin >> this->start;
+void GraphOnVector<T1, T2, K>::SetWay(int start) {
+  this->start = start;
 }
 
 template <typename T1, typename T2, typename K>
@@ -320,40 +318,45 @@ int GraphOnVector<T1, T2, K>::RetQuantive() {
 // Добавлен метод RetAllDist
 class Visitor {
 public:
-  virtual void Pvisit(int vertex, int to) = 0;
-  virtual void Dvisit(int dist_on_vertex, int to) = 0;
-  virtual int Retperent(int vertex) = 0;
-  virtual int Retdist(int vertex) = 0;
+  virtual void Pvisit(const int& vertex, const int& to) = 0;
+  virtual void Dvisit(const int& dist_on_vertex, const int& to) = 0;
+  virtual int Retperent(const int& vertex) = 0;
+  virtual int Retdist(const int& vertex) = 0;
   virtual vector<int> RetAllDist() = 0;
+  virtual const int RetKinf() = 0;
 };
 
-class HolVisitor : public Visitor {
+class SpecificVisitor : public Visitor {
+public:
+  SpecificVisitor(const int& quantity_ver);
+  void Pvisit(const int& vertex, const int& to) override;
+  void Dvisit(const int& dist_on_vertex, const int& to) override;
+  int Retperent(const int& vertex) override;
+  int Retdist(const int& vertex) override;
+  vector<int> RetAllDist() override;
+  const int RetKinf() override;
 private:
   vector<int> dist;
   vector<int> perent;
-public:
-  HolVisitor(int quantity_ver);
-  void Pvisit(int vertex, int to) override;
-  void Dvisit(int dist_on_vertex, int to) override;
-  int Retperent(int vertex) override;
-  int Retdist(int vertex) override;
-  vector<int> RetAllDist() override;
+  const int kInf = std::numeric_limits<int>::max();
 };
 
-void HolVisitor::Dvisit(int dist_on_vertex, int to) { dist[to] = dist_on_vertex; }
+const int SpecificVisitor::RetKinf() { return kInf; }
 
-int HolVisitor::Retdist(int vertex) { return dist[vertex]; }
+void SpecificVisitor::Dvisit(const int& dist_on_vertex, const int& to) { dist[to] = dist_on_vertex; }
 
-int HolVisitor::Retperent(int vertex) { return perent[vertex]; }
+int SpecificVisitor::Retdist(const int& vertex) { return dist[vertex]; }
 
-HolVisitor::HolVisitor(int quantity_ver) {
-  perent.resize(quantity_ver, kInf);
-  dist.resize(quantity_ver, kInf);
+int SpecificVisitor::Retperent(const int& vertex) { return perent[vertex]; }
+
+SpecificVisitor::SpecificVisitor(const int& quantity_ver) {
+  perent = vector<int>(quantity_ver, kInf);
+  dist = vector<int>(quantity_ver, kInf);
 }
 
-void HolVisitor::Pvisit(int vertex, int to) { perent[to] = vertex; }
+void SpecificVisitor::Pvisit(const int& vertex, const int& to) { perent[to] = vertex; }
 
-vector<int> HolVisitor::RetAllDist() {
+vector<int> SpecificVisitor::RetAllDist() {
   return dist;
 }
 
@@ -391,6 +394,7 @@ Visitor* Dijkstra(Visitor* vis, GraphOnVector<int, int, pair<int, int>>& temp_it
 
 int main() {
   int bloks;
+  int start;
   cin >> bloks;
   for (int i = 0; i < bloks; i++) {
     int num_rooms;
@@ -398,13 +402,14 @@ int main() {
     cin >> num_rooms >> num_transitions;
     GraphOnVector<int, int, pair<int, int>> gr(num_transitions, num_rooms);
     gr.SetV();
-    gr.SetWay();
+    cin >> start;
+    gr.SetWay(start);
     Visitor* vertex;
-    HolVisitor hv(num_rooms);
+    SpecificVisitor hv(num_rooms);
     vertex = &hv;
     vertex = Dijkstra(vertex, gr);
     for (auto distance : vertex->RetAllDist()) {
-      if (distance == kInf) {
+      if (distance == hv.RetKinf()) {
         cout << "2009000999 ";
       }
       else {
