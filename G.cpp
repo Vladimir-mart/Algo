@@ -334,107 +334,96 @@ public:
   virtual int Retperent(int vertex) = 0;
   virtual int Retdist(int vertex) = 0;
   virtual void UseVertex(int vertex) = 0;
-  virtual void SetTup(int vertex, int timer) = 0;
-  virtual void SetTin(int vertex, int timer) = 0;
   virtual int QuesData(int vertex) = 0;
-  virtual int RetTup(int vertex) = 0;
-  virtual int RetTin(int vertex) = 0;
-  virtual void PushRes(pair<int, int> res_p) = 0;
+  virtual int RetQuantityVer() = 0;
+  virtual void PushRes(const pair<int, int>& res_p) = 0;
   virtual vector<pair<int, int>> RetRes() = 0;
 };
 
-class HolVisitor : public Visitor {
-private:
-  vector<int> dist;
-  vector<int> perent;
-  vector<int> tin;
-  vector<int> tup;
-  vector<int> data;
-  map<pair<int, int>, int> edges;
-  vector<pair<int, int>> result;
+class SpecificVisitor : public Visitor {
 public:
-  HolVisitor(int quantity_ver);
+  SpecificVisitor(int quantity_ver);
   void Pvisit(int vertex, int to) override;
   void Dvisit(int dist_on_vertex, int to) override;
   int Retperent(int vertex) override;
   int Retdist(int vertex) override;
   void UseVertex(int vertex) override;
-  void SetTup(int vertex, int timer) override;
-  void SetTin(int vertex, int timer) override;
   int QuesData(int vertex) override;
-  int RetTup(int vertex) override;
-  int RetTin(int vertex) override;
-  void PushRes(pair<int, int> res_p) override;
+  int RetQuantityVer() override;
+  void PushRes(const pair<int, int>& res_p) override;
   vector<pair<int, int>> RetRes();
+private:
+  int quantity_ver;
+  vector<int> dist;
+  vector<int> perent;
+
+  vector<int> data;
+  map<pair<int, int>, int> edges;
+  vector<pair<int, int>> result;
 };
 
-vector<pair<int, int>> HolVisitor::RetRes() {
+int SpecificVisitor::RetQuantityVer() {
+  return quantity_ver;
+}
+
+vector<pair<int, int>> SpecificVisitor::RetRes() {
   return result;
 }
 
-void HolVisitor::PushRes(pair<int, int> res_p) {
+void SpecificVisitor::PushRes(const pair<int, int>& res_p) {
   result.emplace_back(res_p);
 }
 
-int HolVisitor::QuesData(int vertex) {
+int SpecificVisitor::QuesData(int vertex) {
   return data[vertex];
 }
 
-int HolVisitor::RetTup(int vertex) {
-  return tup[vertex];
-}
+void SpecificVisitor::Dvisit(int dist_on_vertex, int to) { dist[to] = dist_on_vertex; }
 
-int HolVisitor::RetTin(int vertex) {
-  return tin[vertex];
-}
+int SpecificVisitor::Retdist(int vertex) { return dist[vertex]; }
 
-void HolVisitor::Dvisit(int dist_on_vertex, int to) { dist[to] = dist_on_vertex; }
+int SpecificVisitor::Retperent(int vertex) { return perent[vertex]; }
 
-int HolVisitor::Retdist(int vertex) { return dist[vertex]; }
-
-int HolVisitor::Retperent(int vertex) { return perent[vertex]; }
-
-void HolVisitor::UseVertex(int vertex) {
+void SpecificVisitor::UseVertex(int vertex) {
   data[vertex] = 1;
 }
 
-HolVisitor::HolVisitor(int quantity_ver) {
+SpecificVisitor::SpecificVisitor(int quantity_ver) {
+  this->quantity_ver = quantity_ver;
   perent.resize(quantity_ver + 1, -1);
   dist.resize(quantity_ver + 1, -1);
   data.resize(quantity_ver);
-  tin.resize(quantity_ver);
-  tup.resize(quantity_ver);
 }
 
-void HolVisitor::SetTup(int vertex, int timer) {
-  tup[vertex] = timer;
-}
+void SpecificVisitor::Pvisit(int vertex, int to) { perent[to] = vertex; }
 
-void HolVisitor::SetTin(int vertex, int timer) {
-  tin[vertex] = timer;
-}
-
-void HolVisitor::Pvisit(int vertex, int to) { perent[to] = vertex; }
+struct TimeUpIn
+{
+  vector<int> tin;
+  vector<int> tup;
+  int timer;
+  int count;
+};
 
 // я в визиторе все изменил, возвращать вектор не имеет смысла
-void DFS(pair<int, int> ver_par, GraphOnVector<int, int, int>& graph, int& timer, int& count, Visitor* vis) {
+void DFS(pair<int, int> ver_par, GraphOnVector<int, int, int>& graph, TimeUpIn& Time, Visitor* vis) {
   vis->UseVertex(ver_par.first);
-  timer++;
-  vis->SetTin(ver_par.first, timer);
-  vis->SetTup(ver_par.first, timer);
-
+  Time.timer++;
+  
+  Time.tup[ver_par.first] = Time.timer;
+  Time.tin[ver_par.first] = Time.timer;
   // этот злодей и тут есть(range-based for)
   for (auto ver_u : graph.RangeB(ver_par.first)) {
     if (ver_u == ver_par.second) {
       continue;
     }
     if (vis->QuesData(ver_u) == 1) {
-      vis->SetTup(ver_par.first, min(vis->RetTup(ver_par.first), vis->RetTin(ver_u)));
+      Time.tup[ver_par.first] = min(Time.tup[ver_par.first], Time.tin[ver_u]);
     }
     else if (vis->QuesData(ver_u) == 0) {
-      DFS(make_pair(ver_u, ver_par.first), graph, timer, count, vis);
-      vis->SetTup(ver_par.first, min(vis->RetTup(ver_par.first), vis->RetTup(ver_u)));
-      if (vis->RetTup(ver_u) > vis->RetTin(ver_par.first)) {
+      DFS(make_pair(ver_u, ver_par.first), graph, Time, vis);
+      Time.tup[ver_par.first] = min(Time.tup[ver_par.first], Time.tup[ver_u]);
+      if (Time.tup[ver_u] > Time.tin[ver_par.first]) {
         int cnt = 0;
         for (auto ver_v : graph.RangeB(ver_par.first)) {
           if (ver_v == ver_u) {
@@ -444,7 +433,7 @@ void DFS(pair<int, int> ver_par, GraphOnVector<int, int, int>& graph, int& timer
 
         if (cnt == 1 && ver_par.first != ver_u) {
           vis->PushRes(make_pair(ver_par.first, ver_u));
-          count++;
+          Time.count++;
         }
       }
     }
@@ -460,21 +449,24 @@ int main() {
   GraphOnVector<int, int, int> graph(num, edge);
   graph.SetV();
   Visitor* vertex;
-  HolVisitor hv(num);
+  SpecificVisitor hv(num);
   vertex = &hv;
-  int timer = 0;
-  int count = 0;
+  TimeUpIn Time;
+  Time.tin.resize(vertex->RetQuantityVer());
+  Time.tup.resize(vertex->RetQuantityVer());
+  Time.timer = 0;
+  Time.count = 0;
   for (int i = 0; i < num; i++) {
     if (vertex->QuesData(i) == 0) {
-      DFS(make_pair(i, -1), graph, timer, count, vertex);
+      DFS(make_pair(i, -1), graph, Time, vertex);
     }
   }
 
-  if (count == 0) {
-    cout << count << '\n';
+  if (Time.count == 0) {
+    cout << Time.count << '\n';
   }
   else {
-    cout << count << '\n';
+    cout << Time.count << '\n';
     vector<int> res;
     for (auto i : vertex->RetRes()) {
       res.push_back(graph.RetVer(i));
