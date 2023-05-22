@@ -306,8 +306,8 @@ void GraphOnVector<T1, T2, K>::SetWay(int start) {
 
 template <typename T1, typename T2, typename K>
 GraphOnVector<T1, T2, K>::GraphOnVector(int edg, int ver) {
-  this->quantity_ver = ver;
-  this->edge = edg;
+  quantity_ver = ver;
+  edge = edg;
 }
 
 template <typename T1, typename T2, typename K>
@@ -320,10 +320,10 @@ class Visitor {
 public:
   virtual void Pvisit(const int& vertex, const int& to) = 0;
   virtual void Dvisit(const int& dist_on_vertex, const int& to) = 0;
-  virtual int Retperent(const int& vertex) = 0;
-  virtual int Retdist(const int& vertex) = 0;
+  virtual const int& Retperent(const int& vertex) = 0;
+  virtual const int& Retdist(const int& vertex) = 0;
   virtual vector<int> RetAllDist() = 0;
-  virtual const int RetKinf() = 0;
+  virtual const int& RetKinf() = 0;
 };
 
 class SpecificVisitor : public Visitor {
@@ -331,23 +331,23 @@ public:
   SpecificVisitor(const int& quantity_ver);
   void Pvisit(const int& vertex, const int& to) override;
   void Dvisit(const int& dist_on_vertex, const int& to) override;
-  int Retperent(const int& vertex) override;
-  int Retdist(const int& vertex) override;
+  const int& Retperent(const int& vertex) override;
+  const int& Retdist(const int& vertex) override;
   vector<int> RetAllDist() override;
-  const int RetKinf() override;
+  const int& RetKinf() override;
 private:
   vector<int> dist;
   vector<int> perent;
   const int kInf = std::numeric_limits<int>::max();
 };
 
-const int SpecificVisitor::RetKinf() { return kInf; }
+const int& SpecificVisitor::RetKinf() { return kInf; }
 
 void SpecificVisitor::Dvisit(const int& dist_on_vertex, const int& to) { dist[to] = dist_on_vertex; }
 
-int SpecificVisitor::Retdist(const int& vertex) { return dist[vertex]; }
+const int& SpecificVisitor::Retdist(const int& vertex) { return dist[vertex]; }
 
-int SpecificVisitor::Retperent(const int& vertex) { return perent[vertex]; }
+const int& SpecificVisitor::Retperent(const int& vertex) { return perent[vertex]; }
 
 SpecificVisitor::SpecificVisitor(const int& quantity_ver) {
   perent = vector<int>(quantity_ver, kInf);
