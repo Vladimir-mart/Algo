@@ -175,8 +175,8 @@ void GraphOnMatrix<T1, T2, K>::SetWay(T1 start) {
 
 template <typename T1, typename T2, typename K>
 GraphOnMatrix<T1, T2, K>::GraphOnMatrix(int ver, int edg) {
-  this->quantity_ver = ver;
-  this->edge = edg;
+  quantity_ver = ver;
+  edge = edg;
 }
 
 template <typename T1, typename T2, typename K>
